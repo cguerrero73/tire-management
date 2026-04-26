@@ -1,0 +1,32 @@
+/* Global styles para el módulo embebido */
+/* El módulo vive dentro de EAM — hereda estilos del parent */
+
+:host {
+  --tm-primary: #1a1a2e;
+  --tm-secondary: #16213e;
+  --tm-accent: #0f3460;
+  --tm-success: #4CAF50;
+  --tm-warning: #FFC107;
+  --tm-danger: #f44336;
+  --tm-info: #2196F3;
+
+  display: block;
+  box-sizing: border-box;
+}
+
+/* Reset básico para el módulo embebido */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+  background: transparent;
+}
