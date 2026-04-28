@@ -1,0 +1,37 @@
+{
+  "tenant": "default",
+  "tenantName": "Default Configuration",
+  "environment": "development",
+  "api": {
+    "baseUrl": "/api",
+    "systemFunctionPrefix": "TM",
+    "timeout": 30000
+  },
+  "features": {
+    "map": {
+      "enabled": false,
+      "defaultCenter": [0, 0],
+      "defaultZoom": 2,
+      "library": "openlayers"
+    },
+    "offline": {
+      "enabled": false,
+      "syncInterval": 60000
+    },
+    "notifications": {
+      "enabled": false,
+      "provider": "polling"
+    }
+  },
+  "libraries": [],
+  "angular": {
+    "standalone": true,
+    "rootComponent": "app-root"
+  },
+  "ui": {
+    "theme": "auto",
+    "locale": "en",
+    "dateFormat": "YYYY-MM-DD",
+    "numberFormat": "0,0.00"
+  }
+}

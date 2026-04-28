@@ -1,0 +1,49 @@
+{
+  "tenant": "acme-corp",
+  "tenantName": "ACME Corporation",
+  "environment": "production",
+  "api": {
+    "baseUrl": "https://eam.acme.com",
+    "systemFunctionPrefix": "TM",
+    "timeout": 30000
+  },
+  "features": {
+    "map": {
+      "enabled": true,
+      "defaultCenter": [-34.6037, -58.3816],
+      "defaultZoom": 12,
+      "library": "openlayers"
+    },
+    "offline": {
+      "enabled": true,
+      "syncInterval": 30000
+    },
+    "notifications": {
+      "enabled": true,
+      "provider": "websocket"
+    }
+  },
+  "libraries": [
+    {
+      "id": "openlayers",
+      "url": "https://cdn.jsdelivr.net/npm/ol@v9.1.0/dist/ol.js",
+      "type": "js",
+      "critical": true
+    },
+    {
+      "id": "openlayers-css",
+      "url": "https://cdn.jsdelivr.net/npm/ol@v9.1.0/ol.css",
+      "type": "css"
+    }
+  ],
+  "angular": {
+    "standalone": true,
+    "rootComponent": "app-root"
+  },
+  "ui": {
+    "theme": "light",
+    "locale": "es-AR",
+    "dateFormat": "DD/MM/YYYY",
+    "numberFormat": "0,00"
+  }
+}

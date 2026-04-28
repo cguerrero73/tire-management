@@ -28,12 +28,14 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*.json",
+                "input": "src/configs",
+                "output": "/configs"
               }
             ],
-            "styles": [
-              "src/styles.scss"
-            ],
-            
+            "styles": ["src/styles.scss"]
           },
           "configurations": {
             "production": {
@@ -52,14 +54,12 @@
               "outputHashing": "all",
               "optimization": true,
               "sourceMap": false,
-              "extractLicenses": true,
-              
+              "extractLicenses": true
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true,
-              
+              "sourceMap": true
             }
           },
           "defaultConfiguration": "production"

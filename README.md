@@ -1,59 +1,68 @@
 # TireManagement
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.8.
+Angular module for HxGN EAM tire management, deployed via Extensibility Framework (EF).
 
-## Development server
+## Architecture
 
-To start a local development server, run:
-
-```bash
-ng serve
+```
+src/
+├── eam/                    # EAM EF Bootstrap
+│   ├── bootstrap.ts        # Entry point for EAM
+│   └── config.loader.ts    # Tenant config loader
+├── core/                   # Core services & adapters
+│   ├── adapters/           # EAM adapter (session, headers)
+│   ├── services/           # API, config, tenant, library-loader
+│   └── models/             # TypeScript + Zod schemas
+├── configs/                # Tenant-specific configs
+│   ├── default/            # Fallback config
+│   └── {tenant-id}/        # Per-tenant overrides
+└── app/                    # Angular application
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Quick Start
 
 ```bash
-ng generate component component-name
+# Install dependencies
+npm install
+
+# Development server
+npm start
+
+# Build for production
+npm run build:all
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## EAM Deployment
+
+See [EAM Deployment Guide](docs/EAM_DEPLOYMENT.md) for:
+
+- Build output structure
+- Server deployment steps
+- Screen registration in EAM
+- Tenant configuration
+
+## Key Commands
+
+| Command             | Description                  |
+| ------------------- | ---------------------------- |
+| `npm start`         | Dev server at localhost:4200 |
+| `npm run build`     | Angular app → dist/browser/  |
+| `npm run build:eam` | EAM bootstrap → dist-eam/    |
+| `npm run build:all` | Both builds combined         |
+| `npm test`          | Unit tests                   |
+
+## Multi-Tenant Support
+
+Configs live in `src/configs/{tenant-id}/config.json`. Add new tenants without code changes:
 
 ```bash
-ng generate --help
+mkdir src/configs/new-client
+cp src/configs/acme-corp/config.json src/configs/new-client/
+# Edit config.json with tenant values
 ```
 
-## Building
+## EAM Integration Points
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- **Session/Tenant**: `EAMAdapter.getTenant()`, `getSessionId()`
+- **HTTP Headers**: `Request-Type: XMLHTTP`, params: `eamid`, `tenant`
+- **URL Pattern**: `{systemFunction}.xmlhttp`, `{systemFunction}.EVT.xmlhttp`

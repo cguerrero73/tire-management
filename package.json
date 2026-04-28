@@ -6,7 +6,11 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "build:eam": "tsc -p tsconfig.eam.json",
+    "build:all": "npm run build && npm run build:eam",
+    "deploy:local": "npm run build:all && cp -r dist-eam/* dist/browser/ 2>/dev/null || mkdir -p dist/browser && cp -r dist-eam/* dist/browser/",
+    "deploy:check": "ls -la dist/browser/ 2>/dev/null && ls -la dist-eam/ 2>/dev/null"
   },
   "private": true,
   "packageManager": "npm@11.11.0",
@@ -18,7 +22,8 @@
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@angular/build": "^21.2.8",
@@ -27,4 +32,5 @@
     "prettier": "^3.8.1",
     "typescript": "~5.9.2"
   }
+}
 }

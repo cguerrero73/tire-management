@@ -2,9 +2,16 @@
 
 # Compiled output
 /dist
+/dist-eam
 /tmp
 /out-tsc
 /bazel-out
+
+# Vercel
+.vercel
+
+# Learning/analysis files (not part of the app)
+/tolearn
 
 # Node
 /node_modules
