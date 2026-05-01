@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TenantConfig } from './core/models/tenant-config.model';
-import { ConfigService } from './core/services/config.service';
+import { TenantConfig } from '../core/models/tenant-config.model';
+import { ConfigService } from '../core/services/config.service';
 import { isPlatformBrowser } from '@angular/common';
 
 // Placeholder minimal — el contenido real va en features/pages
@@ -17,7 +17,7 @@ import { isPlatformBrowser } from '@angular/common';
         <span class="tenant-badge">{{ tenantId }}</span>
       </header>
       <main class="tire-content">
-        <p>Módulo Tire Management para HxGN EAM</p>
+        <p>Módulo Tire Management para HxGN EAM XXXX</p>
         <p>
           Tenant: <strong>{{ tenantId }}</strong> | Env: <strong>{{ environment }}</strong>
         </p>

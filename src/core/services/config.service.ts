@@ -28,7 +28,7 @@ export function initializeConfig(config?: TenantConfig): TenantConfig {
   // Notify listeners
   notifyListeners();
 
-  return currentConfig;
+  return currentConfig!;
 }
 
 /**

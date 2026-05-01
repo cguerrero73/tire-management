@@ -5,12 +5,12 @@ import {
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
-import { ConfigService } from './core/services/config.service';
-import { TenantConfig } from './core/models/tenant-config.model';
+import { ConfigService } from '../core/services/config.service';
+import { TenantConfig } from '../core/models/tenant-config.model';
 
 // Re-export for external use
-export { ConfigService } from './core/services/config.service';
-export { TenantConfig } from './core/models/tenant-config.model';
+export { ConfigService } from '../core/services/config.service';
+export type { TenantConfig } from '../core/models/tenant-config.model';
 
 export function initializeAppConfig(): ApplicationConfig {
   // Try to get config from window (set by EAM bootstrap) or use default

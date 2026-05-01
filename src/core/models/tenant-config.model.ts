@@ -1,6 +1,6 @@
 /**
  * Tenant Configuration Model
- * 
+ *
  * Type definitions and Zod schemas for tenant-specific configuration.
  * This ensures type safety across all tenant configs.
  */
@@ -16,7 +16,7 @@ export const LibraryConfigSchema = z.object({
   url: z.string().url(),
   type: z.enum(['js', 'css']),
   /** If true, will wait for this script before bootstrapping Angular */
-  critical?: boolean,
+  critical: z.boolean().optional(),
 });
 
 export type LibraryConfig = z.infer<typeof LibraryConfigSchema>;
@@ -26,20 +26,26 @@ export type LibraryConfig = z.infer<typeof LibraryConfigSchema>;
 // ================================
 
 export const FeaturesConfigSchema = z.object({
-  map: z.object({
-    enabled: z.boolean(),
-    defaultCenter: z.tuple([z.number(), z.number()]).optional(),
-    defaultZoom: z.number().optional(),
-    library: z.enum(['openlayers', 'leaflet', 'googlemaps']).optional(),
-  }).optional(),
-  offline: z.object({
-    enabled: z.boolean(),
-    syncInterval: z.number().optional(),
-  }).optional(),
-  notifications: z.object({
-    enabled: z.boolean(),
-    provider: z.enum(['websocket', 'polling']).optional(),
-  }).optional(),
+  map: z
+    .object({
+      enabled: z.boolean(),
+      defaultCenter: z.tuple([z.number(), z.number()]).optional(),
+      defaultZoom: z.number().optional(),
+      library: z.enum(['openlayers', 'leaflet', 'googlemaps']).optional(),
+    })
+    .optional(),
+  offline: z
+    .object({
+      enabled: z.boolean(),
+      syncInterval: z.number().optional(),
+    })
+    .optional(),
+  notifications: z
+    .object({
+      enabled: z.boolean(),
+      provider: z.enum(['websocket', 'polling']).optional(),
+    })
+    .optional(),
 });
 
 export type FeaturesConfig = z.infer<typeof FeaturesConfigSchema>;
@@ -58,7 +64,7 @@ export const ApiConfigSchema = z.object({
   /** Timeout for API requests in ms */
   timeout: z.number().optional(),
   /** Custom headers to include in all requests */
-  headers: z.record(z.string()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
 });
 
 export type ApiConfig = z.infer<typeof ApiConfigSchema>;
@@ -92,7 +98,7 @@ export const UIConfigSchema = z.object({
   /** Number format pattern */
   numberFormat: z.string().optional(),
   /** Custom CSS variables overrides */
-  cssVariables: z.record(z.string()).optional(),
+  cssVariables: z.record(z.string(), z.string()).optional(),
 });
 
 export type UIConfig = z.infer<typeof UIConfigSchema>;
@@ -119,7 +125,7 @@ export const TenantConfigSchema = z.object({
   /** UI and localization settings */
   ui: UIConfigSchema.optional(),
   /** Custom tenant-specific overrides */
-  custom: z.record(z.any()).optional(),
+  custom: z.record(z.string(), z.any()).optional(),
 });
 
 export type TenantConfig = z.infer<typeof TenantConfigSchema>;
