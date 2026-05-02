@@ -31,17 +31,13 @@ export function getSessionId(): string | null {
   if (!isRunningInEAM()) return null;
 
   try {
-    // Try EAM.SessionStorage first
     if (window.EAM?.SessionStorage) {
       return window.EAM.SessionStorage.getEamId() || null;
     }
-    // Fallback to gAppData
     if (window.gAppData?.storageDataForLogin?.eamid) {
       return window.gAppData.storageDataForLogin.eamid;
     }
-  } catch (error) {
-    console.warn('[EAMAdapter] Failed to get session ID:', error);
-  }
+  } catch (e) {}
   return null;
 }
 
@@ -52,17 +48,13 @@ export function getTenant(): string {
   if (!isRunningInEAM()) return 'default';
 
   try {
-    // Try EAM.SessionStorage first
     if (window.EAM?.SessionStorage) {
       return window.EAM.SessionStorage.getTenant() || 'default';
     }
-    // Fallback to gAppData
     if (window.gAppData?.storageDataForLogin?.tenant) {
       return window.gAppData.storageDataForLogin.tenant;
     }
-  } catch (error) {
-    console.warn('[EAMAdapter] Failed to get tenant:', error);
-  }
+  } catch (e) {}
   return 'default';
 }
 
@@ -79,9 +71,7 @@ export function getUserId(): string | null {
     if (window.EAM?.UserData) {
       return window.EAM.UserData.getUserId?.() || null;
     }
-  } catch (error) {
-    console.warn('[EAMAdapter] Failed to get user ID:', error);
-  }
+  } catch (e) {}
   return null;
 }
 
@@ -153,20 +143,18 @@ export function buildEAMUrl(
 
 /**
  * Get system function from the current EAM context
- * Useful when running inside an EAM screen
  */
 export function getCurrentSystemFunction(): string | null {
   if (!isRunningInEAM()) return null;
 
   try {
-    // Try to get from the current viewport/panel
-    const viewport = window.EAM?.Viewport;
-    if (viewport?.getSystemFunction) {
-      return viewport.getSystemFunction();
+    if (window.EAM?.Utils?.getScreen) {
+      return window.EAM.Utils.getScreen().getUserFunction() || null;
     }
-  } catch (error) {
-    console.warn('[EAMAdapter] Failed to get current system function:', error);
-  }
+    if (window.EAM?.Viewport?.getSystemFunction) {
+      return window.EAM.Viewport.getSystemFunction();
+    }
+  } catch (e) {}
   return null;
 }
 

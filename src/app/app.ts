@@ -151,10 +151,10 @@ export class App {
   private loadUrlParams(): void {
     if (isPlatformBrowser(this.platformId)) {
       const params = new URLSearchParams(window.location.search);
-      this.eamId = params.get('tireEamid') || 'not set';
-      this.tenantId = params.get('tireTenant') || 'not set';
-      this.language = params.get('tireLang') || 'not set';
-      this.systemFunction = params.get('tireSysFunc') || 'not set';
+      this.eamId = params.get('eamid') || 'not set';
+      this.tenantId = params.get('tenant') || 'not set';
+      this.language = params.get('lang') || 'not set';
+      this.systemFunction = params.get('sysfunc') || 'not set';
 
       console.log('[App] EAM session params loaded:', {
         eamId: this.eamId,

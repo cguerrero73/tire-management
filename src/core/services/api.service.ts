@@ -3,10 +3,10 @@
  *
  * HTTP client wrapper that automatically includes EAM headers and params.
  * All API calls to the EAM backend should go through this service.
+ *
+ * Reads eamid/tenant from URL params (passed from tire-mgmt-ef.js)
+ * and adds XMLHTTP headers expected by EAM backend.
  */
-
-import { EAMAdapter } from '../adapters/eam.adapter';
-import { TenantConfig } from '../models/tenant-config.model';
 
 export interface ApiRequestOptions {
   url: string;
@@ -15,7 +15,6 @@ export interface ApiRequestOptions {
   body?: any;
   headers?: Record<string, string>;
   timeout?: number;
-  config?: TenantConfig;
 }
 
 export interface ApiResponse<T = any> {
@@ -25,42 +24,84 @@ export interface ApiResponse<T = any> {
   headers: Record<string, string>;
 }
 
+export interface ApiError extends Error {
+  status: number;
+  data?: any;
+}
+
 /**
- * Build full URL with EAM params
+ * Get EAM session params from URL
  */
-function buildUrlWithParams(
+function getEamSessionParams(): { eamid: string; tenant: string } {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    eamid: params.get('eamid') || '',
+    tenant: params.get('tenant') || '',
+  };
+}
+
+/**
+ * Send error to parent window (EAM context)
+ */
+function sendErrorToParent(error: ApiError, url: string): void {
+  if (window.parent !== window) {
+    window.parent.postMessage(
+      {
+        type: 'TIRE_MGMT_ERROR',
+        error: error.message,
+        status: error.status,
+        url: url,
+        timestamp: Date.now(),
+      },
+      '*',
+    );
+  }
+}
+
+/**
+ * Build URL with params
+ */
+function buildUrl(
   baseUrl: string,
-  params?: Record<string, string | number | boolean>,
+  eamid: string,
+  tenant: string,
+  customParams?: Record<string, string | number | boolean>,
 ): string {
-  if (!params || Object.keys(params).length === 0) {
-    return baseUrl;
+  const url = new URL(baseUrl, window.location.origin);
+
+  // Add EAM session params
+  if (eamid) url.searchParams.set('eamid', eamid);
+  if (tenant) url.searchParams.set('tenant', tenant);
+
+  // Add custom params
+  if (customParams) {
+    Object.entries(customParams).forEach(([key, value]) => {
+      url.searchParams.set(key, String(value));
+    });
   }
 
-  const url = new URL(baseUrl, window.location.origin);
-  Object.entries(params).forEach(([key, value]) => {
-    url.searchParams.append(key, String(value));
-  });
   return url.pathname + url.search;
 }
 
 /**
- * Make an HTTP request with EAM headers
+ * Make an HTTP request with EAM headers and params
  */
 async function request<T = any>(options: ApiRequestOptions): Promise<ApiResponse<T>> {
-  const { url, method = 'GET', params, body, headers = {}, timeout = 30000, config } = options;
+  const { url, method = 'GET', params, body, headers = {}, timeout = 30000 } = options;
 
-  // Merge EAM headers with custom headers
-  const eamHeaders = EAMAdapter.getEAMHeaders();
-  const mergedHeaders = {
-    ...eamHeaders,
+  // Get EAM session params from URL
+  const { eamid, tenant } = getEamSessionParams();
+
+  // Build headers with XMLHTTP required by EAM
+  const mergedHeaders: Record<string, string> = {
+    'Request-Type': 'XMLHTTP',
+    'Request-Source': 'XMLHTTP',
     'Content-Type': 'application/json',
     ...headers,
   };
 
-  // Build URL with EAM params (eamid, tenant)
-  const eamParams = EAMAdapter.getEAMParams();
-  const allParams = { ...eamParams, ...params };
-  const fullUrl = buildUrlWithParams(url, allParams);
+  // Build full URL with EAM params
+  const fullUrl = buildUrl(url, eamid, tenant, params);
 
   // Build fetch options
   const fetchOptions: RequestInit = {
@@ -101,10 +142,17 @@ async function request<T = any>(options: ApiRequestOptions): Promise<ApiResponse
     if (!response.ok) {
       // Check for session timeout
       if (response.status === 401 || response.status === 403) {
-        console.error('[ApiService] Session timeout detected');
         window.dispatchEvent(new CustomEvent('eam-session-timeout'));
       }
-      throw new ApiError(`HTTP ${response.status}: ${response.statusText}`, response.status, data);
+
+      const error = new ApiError(
+        `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        data,
+      ) as ApiError;
+
+      sendErrorToParent(error, url);
+      throw error;
     }
 
     return {
@@ -117,17 +165,25 @@ async function request<T = any>(options: ApiRequestOptions): Promise<ApiResponse
     clearTimeout(timeoutId);
 
     if (error instanceof ApiError) {
+      sendErrorToParent(error, url);
       throw error;
     }
 
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
-        throw new ApiError(`Request timeout after ${timeout}ms`, 408);
+        const timeoutError = new ApiError(`Request timeout after ${timeout}ms`, 408) as ApiError;
+        sendErrorToParent(timeoutError, url);
+        throw timeoutError;
       }
-      throw new ApiError(error.message, 0);
+
+      const genericError = new ApiError(error.message, 0) as ApiError;
+      sendErrorToParent(genericError, url);
+      throw genericError;
     }
 
-    throw new ApiError('Unknown error', 0);
+    const unknownError = new ApiError('Unknown error', 0) as ApiError;
+    sendErrorToParent(unknownError, url);
+    throw unknownError;
   }
 }
 
