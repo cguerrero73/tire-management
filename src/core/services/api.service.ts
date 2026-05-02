@@ -32,9 +32,23 @@ export interface ApiError extends Error {
 }
 
 /**
+ * Get EAM base URL from URL params (passed from tire-mgmt-ef.js)
+ */
+function getEamBaseUrl(): string {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('parentUrl') || '';
+}
+
+/**
  * Get the base URL from the parent window (EAM context)
  */
 function getParentBaseUrl(): string {
+  // First try from URL params (set by tire-mgmt-ef.js)
+  const eamBaseUrl = getEamBaseUrl();
+  if (eamBaseUrl) {
+    return eamBaseUrl;
+  }
+  // Fallback to window.parent if in iframe and same origin
   if (window.parent !== window) {
     try {
       return window.parent.location.origin;

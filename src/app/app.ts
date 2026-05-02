@@ -69,7 +69,9 @@ export class App {
     } catch (err) {
       if (err instanceof ApiError) {
         this.error = `Error ${err.status}: ${err.message}`;
+        console.error('API Error:', err);
       } else {
+        console.log('Unexpected error:', err);
         this.error = 'Unknown error';
       }
     } finally {
