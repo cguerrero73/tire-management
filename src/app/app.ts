@@ -1,10 +1,8 @@
 import { Component, ChangeDetectionStrategy, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TenantConfig } from '../core/models/tenant-config.model';
 import { ConfigService } from '../core/services/config.service';
 import { isPlatformBrowser } from '@angular/common';
 
-// Placeholder minimal — el contenido real va en features/pages
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -17,14 +15,39 @@ import { isPlatformBrowser } from '@angular/common';
         <span class="tenant-badge">{{ tenantId }}</span>
       </header>
       <main class="tire-content">
-        <p>Módulo Tire Management para HxGN EAM XXXX</p>
-        <p>
-          Tenant: <strong>{{ tenantId }}</strong> | Env: <strong>{{ environment }}</strong>
-        </p>
-        <p>Feature flags: {{ featureFlags | json }}</p>
-        <p>
-          API Base: <code>{{ apiBase }}</code>
-        </p>
+        <h2>Session Data from EAM</h2>
+        <div class="session-data">
+          <div class="data-row">
+            <span class="label">Tenant:</span>
+            <span class="value">{{ tenantId }}</span>
+          </div>
+          <div class="data-row">
+            <span class="label">EAM ID:</span>
+            <span class="value">{{ eamId }}</span>
+          </div>
+          <div class="data-row">
+            <span class="label">Language:</span>
+            <span class="value">{{ language }}</span>
+          </div>
+          <div class="data-row">
+            <span class="label">System Function:</span>
+            <span class="value">{{ systemFunction }}</span>
+          </div>
+        </div>
+
+        <h3>Config Data</h3>
+        <div class="session-data">
+          <div class="data-row">
+            <span class="label">Env:</span>
+            <span class="value">{{ environment }}</span>
+          </div>
+          <div class="data-row">
+            <span class="label">API Base:</span>
+            <span class="value"
+              ><code>{{ apiBase }}</code></span
+            >
+          </div>
+        </div>
       </main>
     </div>
   `,
@@ -59,11 +82,40 @@ import { isPlatformBrowser } from '@angular/common';
       }
       .tire-content {
         padding: 2rem;
-        text-align: center;
         color: #666;
       }
-      .tire-content code {
-        background: #f0f0f0;
+      .tire-content h2 {
+        margin-top: 0;
+        color: #333;
+      }
+      .tire-content h3 {
+        margin-top: 1.5rem;
+        color: #333;
+      }
+      .session-data {
+        background: #f5f5f5;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      .data-row {
+        display: flex;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #ddd;
+      }
+      .data-row:last-child {
+        border-bottom: none;
+      }
+      .label {
+        font-weight: bold;
+        width: 150px;
+        color: #555;
+      }
+      .value {
+        color: #333;
+      }
+      code {
+        background: #e0e0e0;
         padding: 0.2rem 0.4rem;
         border-radius: 3px;
         font-size: 0.85em;
@@ -72,13 +124,19 @@ import { isPlatformBrowser } from '@angular/common';
   ],
 })
 export class App {
-  tenantId = 'loading...';
-  environment = 'loading...';
-  apiBase = 'loading...';
-  featureFlags = {};
+  // From URL params (passed from EAM via EF iframe)
+  eamId = 'not set';
+  tenantId = 'not set';
+  language = 'not set';
+  systemFunction = 'not set';
+
+  // From config
+  environment = 'not set';
+  apiBase = 'not set';
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     this.loadConfig();
+    this.loadUrlParams();
   }
 
   private loadConfig(): void {
@@ -87,7 +145,23 @@ export class App {
       this.tenantId = config.tenant;
       this.environment = config.environment;
       this.apiBase = config.api.baseUrl;
-      this.featureFlags = config.features || {};
+    }
+  }
+
+  private loadUrlParams(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      const params = new URLSearchParams(window.location.search);
+      this.eamId = params.get('tireEamid') || 'not set';
+      this.tenantId = params.get('tireTenant') || 'not set';
+      this.language = params.get('tireLang') || 'not set';
+      this.systemFunction = params.get('tireSysFunc') || 'not set';
+
+      console.log('[App] EAM session params loaded:', {
+        eamId: this.eamId,
+        tenantId: this.tenantId,
+        language: this.language,
+        systemFunction: this.systemFunction,
+      });
     }
   }
 }
