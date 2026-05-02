@@ -130,7 +130,6 @@ function onBeforeRender1() {
 
     // Get EAM tab panel body and append container
     var el = Ext.ComponentQuery.query('uxtabpanel')[0].up().body.dom;
-    Ext.ComponentQuery.query('uxtabpanel')[0].el.dom.style.height = '0px';
 
     if (el) {
       el.appendChild(container);
@@ -152,6 +151,8 @@ function onAfterRender1() {
       tenant = EAM.SessionStorage.getTenant() || '';
     }
   } catch (e) {}
+
+  Ext.ComponentQuery.query('uxtabpanel')[0].el.dom.style.height = '0px';
 
   window.dispatchEvent(
     new CustomEvent('tire-management-mounted', {
@@ -175,6 +176,7 @@ function onAfterLayout1() {
       iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
     } catch (e) {}
   }
+  Ext.ComponentQuery.query('uxtabpanel')[0].el.dom.style.height = '0px';
 }
 
 // -------------------------------------------------------------------------
