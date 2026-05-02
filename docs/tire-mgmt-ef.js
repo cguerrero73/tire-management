@@ -8,13 +8,11 @@
 //   - Screen Code: TIREMGMT
 //   - Extensible Framework JS: EAM.custom.external_TIREMGMT
 
-var Ext = Ext || {};
-
 // =========================================================================
 // CONFIGURATION — UPDATE THESE VALUES FOR YOUR ENVIRONMENT
 // =========================================================================
 // URL where the Angular app is served
-APP_URL = 'http://localhost:4203';
+APP_URL = 'http://localhost:4201';
 
 // Namespace for the EF component (must match the registered name in EAM)
 NAMESPACE = 'EAM.custom.external_TIREMGMT';
