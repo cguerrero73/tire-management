@@ -78,3 +78,39 @@ code {
   border-radius: 3px;
   font-size: 0.85em;
 }
+
+.btn {
+  background: #1a1a2e;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn:hover {
+  background: #2a2a4e;
+}
+
+.btn:disabled {
+  background: #888;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #d32f2f;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: #ffebee;
+  border-radius: 4px;
+}
+
+.response {
+  background: #e8e8e8;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.8rem;
+  margin-top: 1rem;
+}

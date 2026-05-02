@@ -1,7 +1,10 @@
 import { Component, ChangeDetectionStrategy, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ConfigService } from '../core/services/config.service';
+import { ApiService, ApiError } from '../core/services/api.service';
 import { isPlatformBrowser } from '@angular/common';
+
+const apiService = ApiService;
 
 @Component({
   selector: 'app-root',
@@ -12,18 +15,16 @@ import { isPlatformBrowser } from '@angular/common';
   styleUrl: './app.component.css',
 })
 export class App {
-  // From URL params (passed from EAM via EF iframe)
   eamId = 'not set';
   tenantId = 'not set';
   language = 'not set';
   systemFunction = 'not set';
-
-  // Parent window URL (EAM origin)
-  parentUrl = 'not in iframe';
-
-  // From config
+  parentUrl = 'not set';
   environment = 'not set';
   apiBase = 'not set';
+  loading = false;
+  error = '';
+  apiResponse = '';
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     this.loadConfig();
@@ -54,6 +55,25 @@ export class App {
     if (isPlatformBrowser(this.platformId)) {
       const params = new URLSearchParams(window.location.search);
       this.parentUrl = params.get('parentUrl') || 'not set';
+    }
+  }
+
+  async makeApiCall() {
+    this.loading = true;
+    this.error = '';
+    this.apiResponse = '';
+
+    try {
+      const response = await apiService.get('TESTFUNCTION.LST', { pageaction: 'GETDATA' });
+      this.apiResponse = JSON.stringify(response.data, null, 2);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        this.error = `Error ${err.status}: ${err.message}`;
+      } else {
+        this.error = 'Unknown error';
+      }
+    } finally {
+      this.loading = false;
     }
   }
 }

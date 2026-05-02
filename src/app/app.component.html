@@ -43,5 +43,20 @@
         >
       </div>
     </div>
+
+    <h3>API Test</h3>
+    <div class="session-data">
+      <button class="btn" (click)="makeApiCall()" [disabled]="loading">
+        {{ loading ? 'Calling...' : 'Make API Call' }}
+      </button>
+
+      @if (error) {
+        <div class="error">{{ error }}</div>
+      }
+
+      @if (apiResponse) {
+        <pre class="response">{{ apiResponse }}</pre>
+      }
+    </div>
   </main>
 </div>
