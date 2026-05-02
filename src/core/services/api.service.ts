@@ -1,13 +1,8 @@
 /**
  * API Service
  *
- * HTTP client wrapper that automatically includes EAM headers and params.
- * All API calls to the EAM backend should go through this service.
- *
- * Reads eamid/tenant from URL params (passed from tire-mgmt-ef.js)
- * and adds XMLHTTP headers expected by EAM backend.
- *
- * When running inside an iframe, uses the parent window origin as base URL.
+ * HTTP client wrapper for EAM backend.
+ * Calls are made to the EAM server using the baseUrl provided by the caller.
  */
 
 export interface ApiRequestOptions {
@@ -29,49 +24,6 @@ export interface ApiResponse<T = any> {
 export interface ApiError extends Error {
   status: number;
   data?: any;
-}
-
-/**
- * Get EAM base URL from URL params (passed from tire-mgmt-ef.js)
- */
-function getEamBaseUrl(): string {
-  const params = new URLSearchParams(window.location.search);
-  return params.get('parentUrl') || '';
-}
-
-/**
- * Get the base URL from the parent window (EAM context)
- */
-function getParentBaseUrl(): string {
-  // First try from URL params (set by tire-mgmt-ef.js)
-  const eamBaseUrl = getEamBaseUrl();
-  if (eamBaseUrl) {
-    return eamBaseUrl;
-  }
-  // Fallback to window.parent if in iframe and same origin
-  if (window.parent !== window) {
-    try {
-      return window.parent.location.origin;
-    } catch (e) {
-      return '';
-    }
-  }
-  return '';
-}
-
-/**
- * Build the full URL for EAM backend
- * When in iframe: uses parent origin + url
- * When standalone: uses the url directly
- */
-function buildFullUrl(url: string): string {
-  const parentOrigin = getParentBaseUrl();
-  if (parentOrigin) {
-    // Running inside EAM iframe - use parent origin
-    return parentOrigin + url;
-  }
-  // Standalone mode
-  return url;
 }
 
 /**
@@ -104,49 +56,17 @@ function sendErrorToParent(error: ApiError, url: string): void {
 }
 
 /**
- * Build URL with params
+ * Build full URL with baseUrl, eamid, tenant, and custom params
  */
-function buildUrl(
+function buildFullUrl(
+  baseUrl: string,
   url: string,
   eamid: string,
   tenant: string,
   customParams?: Record<string, string | number | boolean>,
 ): string {
-  // Use parent origin for the base
-  const baseWithParent = buildFullUrl('/');
-  const baseUrl = new URL(baseWithParent);
+  const fullUrl = baseUrl + url;
 
-  // Navigate to the target URL path
-  let fullUrl: URL;
-  try {
-    fullUrl = new URL(url, baseWithParent);
-  } catch (e) {
-    // If URL parsing fails, just prepend parent origin to the url
-    return buildFullUrl(url) + buildQueryString(eamid, tenant, customParams);
-  }
-
-  // Add EAM session params
-  if (eamid) fullUrl.searchParams.set('eamid', eamid);
-  if (tenant) fullUrl.searchParams.set('tenant', tenant);
-
-  // Add custom params
-  if (customParams) {
-    Object.entries(customParams).forEach(([key, value]) => {
-      fullUrl.searchParams.set(key, String(value));
-    });
-  }
-
-  return fullUrl.pathname + fullUrl.search;
-}
-
-/**
- * Build query string from params
- */
-function buildQueryString(
-  eamid: string,
-  tenant: string,
-  customParams?: Record<string, string | number | boolean>,
-): string {
   const params = new URLSearchParams();
   if (eamid) params.set('eamid', eamid);
   if (tenant) params.set('tenant', tenant);
@@ -155,14 +75,18 @@ function buildQueryString(
       params.set(key, String(value));
     });
   }
+
   const query = params.toString();
-  return query ? '?' + query : '';
+  return fullUrl + (query ? '?' + query : '');
 }
 
 /**
  * Make an HTTP request with EAM headers and params
  */
-async function request<T = any>(options: ApiRequestOptions): Promise<ApiResponse<T>> {
+async function request<T = any>(
+  options: ApiRequestOptions,
+  baseUrl: string,
+): Promise<ApiResponse<T>> {
   const { url, method = 'GET', params, body, headers = {}, timeout = 30000 } = options;
 
   // Get EAM session params from URL
@@ -176,8 +100,8 @@ async function request<T = any>(options: ApiRequestOptions): Promise<ApiResponse
     ...headers,
   };
 
-  // Build full URL with EAM params and parent origin
-  const fullUrl = buildUrl(url, eamid, tenant, params);
+  // Build full URL with baseUrl and params
+  const fullUrl = buildFullUrl(baseUrl, url, eamid, tenant, params);
 
   // Build fetch options
   const fetchOptions: RequestInit = {
@@ -216,7 +140,6 @@ async function request<T = any>(options: ApiRequestOptions): Promise<ApiResponse
 
     // Handle error responses
     if (!response.ok) {
-      // Check for session timeout
       if (response.status === 401 || response.status === 403) {
         window.dispatchEvent(new CustomEvent('eam-session-timeout'));
       }
@@ -279,17 +202,21 @@ export class ApiError extends Error {
 
 /**
  * API Methods for each HTTP verb
+ * All methods require baseUrl as the first argument after url for GET, or as third arg for POST/PUT/DELETE/PATCH
  */
 export const ApiService = {
   /**
    * GET request
+   * @param url - API endpoint path (e.g., '/TESTFUNCTION.LST')
+   * @param params - Query parameters
+   * @param baseUrl - EAM server base URL (e.g., 'https://us1.eam.hxgnsmartcloud.com')
    */
   get<T = any>(
     url: string,
-    params?: Record<string, string | number | boolean>,
-    options?: Partial<ApiRequestOptions>,
+    params: Record<string, string | number | boolean> | undefined,
+    baseUrl: string,
   ): Promise<ApiResponse<T>> {
-    return request<T>({ url, method: 'GET', params, ...options });
+    return request<T>({ url, method: 'GET', params }, baseUrl);
   },
 
   /**
@@ -297,10 +224,11 @@ export const ApiService = {
    */
   post<T = any>(
     url: string,
-    body?: any,
+    body: any,
+    baseUrl: string,
     options?: Partial<ApiRequestOptions>,
   ): Promise<ApiResponse<T>> {
-    return request<T>({ url, method: 'POST', body, ...options });
+    return request<T>({ url, method: 'POST', body, ...options }, baseUrl);
   },
 
   /**
@@ -308,10 +236,11 @@ export const ApiService = {
    */
   put<T = any>(
     url: string,
-    body?: any,
+    body: any,
+    baseUrl: string,
     options?: Partial<ApiRequestOptions>,
   ): Promise<ApiResponse<T>> {
-    return request<T>({ url, method: 'PUT', body, ...options });
+    return request<T>({ url, method: 'PUT', body, ...options }, baseUrl);
   },
 
   /**
@@ -319,10 +248,10 @@ export const ApiService = {
    */
   delete<T = any>(
     url: string,
-    params?: Record<string, string | number | boolean>,
-    options?: Partial<ApiRequestOptions>,
+    params: Record<string, string | number | boolean> | undefined,
+    baseUrl: string,
   ): Promise<ApiResponse<T>> {
-    return request<T>({ url, method: 'DELETE', params, ...options });
+    return request<T>({ url, method: 'DELETE', params }, baseUrl);
   },
 
   /**
@@ -330,10 +259,11 @@ export const ApiService = {
    */
   patch<T = any>(
     url: string,
-    body?: any,
+    body: any,
+    baseUrl: string,
     options?: Partial<ApiRequestOptions>,
   ): Promise<ApiResponse<T>> {
-    return request<T>({ url, method: 'PATCH', body, ...options });
+    return request<T>({ url, method: 'PATCH', body, ...options }, baseUrl);
   },
 };
 

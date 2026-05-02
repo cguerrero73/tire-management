@@ -64,14 +64,16 @@ export class App {
     this.apiResponse = '';
 
     try {
-      const response = await apiService.get('TESTFUNCTION.LST', { pageaction: 'GETDATA' });
+      const response = await apiService.get(
+        '/web/base/TESTFUNCTION.LST',
+        { pageaction: 'GETDATA' },
+        this.parentUrl,
+      );
       this.apiResponse = JSON.stringify(response.data, null, 2);
     } catch (err) {
       if (err instanceof ApiError) {
         this.error = `Error ${err.status}: ${err.message}`;
-        console.error('API Error:', err);
       } else {
-        console.log('Unexpected error:', err);
         this.error = 'Unknown error';
       }
     } finally {
