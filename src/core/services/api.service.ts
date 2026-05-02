@@ -6,6 +6,8 @@
  *
  * Reads eamid/tenant from URL params (passed from tire-mgmt-ef.js)
  * and adds XMLHTTP headers expected by EAM backend.
+ *
+ * When running inside an iframe, uses the parent window origin as base URL.
  */
 
 export interface ApiRequestOptions {
@@ -27,6 +29,35 @@ export interface ApiResponse<T = any> {
 export interface ApiError extends Error {
   status: number;
   data?: any;
+}
+
+/**
+ * Get the base URL from the parent window (EAM context)
+ */
+function getParentBaseUrl(): string {
+  if (window.parent !== window) {
+    try {
+      return window.parent.location.origin;
+    } catch (e) {
+      return '';
+    }
+  }
+  return '';
+}
+
+/**
+ * Build the full URL for EAM backend
+ * When in iframe: uses parent origin + url
+ * When standalone: uses the url directly
+ */
+function buildFullUrl(url: string): string {
+  const parentOrigin = getParentBaseUrl();
+  if (parentOrigin) {
+    // Running inside EAM iframe - use parent origin
+    return parentOrigin + url;
+  }
+  // Standalone mode
+  return url;
 }
 
 /**
@@ -62,25 +93,56 @@ function sendErrorToParent(error: ApiError, url: string): void {
  * Build URL with params
  */
 function buildUrl(
-  baseUrl: string,
+  url: string,
   eamid: string,
   tenant: string,
   customParams?: Record<string, string | number | boolean>,
 ): string {
-  const url = new URL(baseUrl, window.location.origin);
+  // Use parent origin for the base
+  const baseWithParent = buildFullUrl('/');
+  const baseUrl = new URL(baseWithParent);
+
+  // Navigate to the target URL path
+  let fullUrl: URL;
+  try {
+    fullUrl = new URL(url, baseWithParent);
+  } catch (e) {
+    // If URL parsing fails, just prepend parent origin to the url
+    return buildFullUrl(url) + buildQueryString(eamid, tenant, customParams);
+  }
 
   // Add EAM session params
-  if (eamid) url.searchParams.set('eamid', eamid);
-  if (tenant) url.searchParams.set('tenant', tenant);
+  if (eamid) fullUrl.searchParams.set('eamid', eamid);
+  if (tenant) fullUrl.searchParams.set('tenant', tenant);
 
   // Add custom params
   if (customParams) {
     Object.entries(customParams).forEach(([key, value]) => {
-      url.searchParams.set(key, String(value));
+      fullUrl.searchParams.set(key, String(value));
     });
   }
 
-  return url.pathname + url.search;
+  return fullUrl.pathname + fullUrl.search;
+}
+
+/**
+ * Build query string from params
+ */
+function buildQueryString(
+  eamid: string,
+  tenant: string,
+  customParams?: Record<string, string | number | boolean>,
+): string {
+  const params = new URLSearchParams();
+  if (eamid) params.set('eamid', eamid);
+  if (tenant) params.set('tenant', tenant);
+  if (customParams) {
+    Object.entries(customParams).forEach(([key, value]) => {
+      params.set(key, String(value));
+    });
+  }
+  const query = params.toString();
+  return query ? '?' + query : '';
 }
 
 /**
@@ -100,7 +162,7 @@ async function request<T = any>(options: ApiRequestOptions): Promise<ApiResponse
     ...headers,
   };
 
-  // Build full URL with EAM params
+  // Build full URL with EAM params and parent origin
   const fullUrl = buildUrl(url, eamid, tenant, params);
 
   // Build fetch options
