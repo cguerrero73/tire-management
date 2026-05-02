@@ -1,0 +1,47 @@
+<div class="tire-module">
+  <header class="tire-header">
+    <h1>Gestión de Neumáticos</h1>
+    <span class="tenant-badge">{{ tenantId }}</span>
+  </header>
+  <main class="tire-content">
+    <h2>Session Data from EAM</h2>
+    <div class="session-data">
+      <div class="data-row">
+        <span class="label">Parent URL:</span>
+        <span class="value"
+          ><code>{{ parentUrl }}</code></span
+        >
+      </div>
+      <div class="data-row">
+        <span class="label">Tenant:</span>
+        <span class="value">{{ tenantId }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">EAM ID:</span>
+        <span class="value">{{ eamId }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">Language:</span>
+        <span class="value">{{ language }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">System Function:</span>
+        <span class="value">{{ systemFunction }}</span>
+      </div>
+    </div>
+
+    <h3>Config Data</h3>
+    <div class="session-data">
+      <div class="data-row">
+        <span class="label">Env:</span>
+        <span class="value">{{ environment }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">API Base:</span>
+        <span class="value"
+          ><code>{{ apiBase }}</code></span
+        >
+      </div>
+    </div>
+  </main>
+</div>
