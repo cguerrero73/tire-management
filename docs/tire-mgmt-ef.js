@@ -16,12 +16,6 @@ var Ext = Ext || {};
   // =========================================================================
   // URL where the Angular app is served
   var APP_URL = 'http://localhost:4203';
-
-  // Tenant identifier (must match a config in /configs/{tenant}/config.json)
-  var TENANT_ID = 'default';
-
-  // Config base path (where config JSON files are served from)
-  var CONFIG_BASE_PATH = APP_URL + '/configs';
   // =========================================================================
 
   // Polyfill for Ext.isEmpty if not available in this EAM version
@@ -112,6 +106,51 @@ var Ext = Ext || {};
   // -------------------------------------------------------------------------
   // Helper: Create iframe with Angular app
   // -------------------------------------------------------------------------
+  function buildIframeSrc() {
+    var eamid = '';
+    var tenant = '';
+    var lang = '';
+    var sysfunc = '';
+
+    try {
+      if (EAM && EAM.SessionStorage) {
+        eamid = EAM.SessionStorage.getEamId() || '';
+        tenant = EAM.SessionStorage.getTenant() || '';
+      }
+      if (EAM && EAM.AppData) {
+        lang = EAM.AppData.getLanguage() || '';
+      }
+      if (EAM && EAM.Viewport && EAM.Viewport.getSystemFunction) {
+        sysfunc = EAM.Viewport.getSystemFunction() || '';
+      }
+    } catch (e) {
+      console.warn('[EF] Error reading EAM session data:', e);
+    }
+
+    console.log(
+      '[EF] EAM Session — eamid:',
+      eamid,
+      'tenant:',
+      tenant,
+      'lang:',
+      lang,
+      'sysfunc:',
+      sysfunc,
+    );
+
+    return (
+      APP_URL +
+      '?tireEamid=' +
+      encodeURIComponent(eamid) +
+      '&tireTenant=' +
+      encodeURIComponent(tenant) +
+      '&tireLang=' +
+      encodeURIComponent(lang) +
+      '&tireSysFunc=' +
+      encodeURIComponent(sysfunc)
+    );
+  }
+
   function createIframe() {
     var iframe = document.getElementById(IFRAME_ID);
     if (iframe) {
@@ -120,7 +159,7 @@ var Ext = Ext || {};
 
     iframe = document.createElement('iframe');
     iframe.id = IFRAME_ID;
-    iframe.src = APP_URL + '?tenant=' + encodeURIComponent(TENANT_ID);
+    iframe.src = buildIframeSrc();
     iframe.style.width = '100%';
     iframe.style.height = '100%';
     iframe.style.border = 'none';
@@ -193,10 +232,20 @@ var Ext = Ext || {};
     onAfterRender: function (component) {
       console.log('[EF] Stage: afterrender');
 
+      var eamid = '';
+      var tenant = '';
+      try {
+        if (EAM && EAM.SessionStorage) {
+          eamid = EAM.SessionStorage.getEamId() || '';
+          tenant = EAM.SessionStorage.getTenant() || '';
+        }
+      } catch (e) {}
+
       window.dispatchEvent(
         new CustomEvent('tire-management-mounted', {
           detail: {
-            tenant: TENANT_ID,
+            eamid: eamid,
+            tenant: tenant,
             url: APP_URL,
             component: component,
           },
@@ -228,5 +277,4 @@ var Ext = Ext || {};
   console.log('[EF] Tire Management EF Bootstrap loaded');
   console.log('[EF] Namespace: ' + NAMESPACE);
   console.log('[EF] App URL: ' + APP_URL);
-  console.log('[EF] Tenant: ' + TENANT_ID);
 })();
