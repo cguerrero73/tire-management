@@ -18,6 +18,12 @@ import { isPlatformBrowser } from '@angular/common';
         <h2>Session Data from EAM</h2>
         <div class="session-data">
           <div class="data-row">
+            <span class="label">Parent URL:</span>
+            <span class="value"
+              ><code>{{ parentUrl }}</code></span
+            >
+          </div>
+          <div class="data-row">
             <span class="label">Tenant:</span>
             <span class="value">{{ tenantId }}</span>
           </div>
@@ -130,6 +136,9 @@ export class App {
   language = 'not set';
   systemFunction = 'not set';
 
+  // Parent window URL (EAM origin)
+  parentUrl = 'not in iframe';
+
   // From config
   environment = 'not set';
   apiBase = 'not set';
@@ -137,6 +146,7 @@ export class App {
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     this.loadConfig();
     this.loadUrlParams();
+    this.loadParentUrl();
   }
 
   private loadConfig(): void {
@@ -155,13 +165,18 @@ export class App {
       this.tenantId = params.get('tenant') || 'not set';
       this.language = params.get('lang') || 'not set';
       this.systemFunction = params.get('sysfunc') || 'not set';
+    }
+  }
 
-      console.log('[App] EAM session params loaded:', {
-        eamId: this.eamId,
-        tenantId: this.tenantId,
-        language: this.language,
-        systemFunction: this.systemFunction,
-      });
+  private loadParentUrl(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      if (window.parent !== window) {
+        try {
+          this.parentUrl = window.parent.location.origin;
+        } catch (e) {
+          this.parentUrl = 'blocked by cross-origin';
+        }
+      }
     }
   }
 }
