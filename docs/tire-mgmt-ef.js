@@ -65,6 +65,7 @@ function buildIframeSrc() {
   var tenant = '';
   var lang = '';
   var sysfunc = '';
+  var parentUrl = window.location.origin;
 
   try {
     if (EAM && EAM.SessionStorage) {
@@ -88,7 +89,9 @@ function buildIframeSrc() {
     '&lang=' +
     encodeURIComponent(lang) +
     '&sysfunc=' +
-    encodeURIComponent(sysfunc)
+    encodeURIComponent(sysfunc) +
+    '&parentUrl=' +
+    encodeURIComponent(parentUrl)
   );
 }
 

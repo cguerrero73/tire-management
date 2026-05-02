@@ -52,14 +52,8 @@ export class App {
 
   private loadParentUrl(): void {
     if (isPlatformBrowser(this.platformId)) {
-      if (window.parent !== window) {
-        try {
-          this.parentUrl = window.parent.location.origin;
-        } catch (e) {
-          console.log(e);
-          this.parentUrl = 'blocked by cross-origin';
-        }
-      }
+      const params = new URLSearchParams(window.location.search);
+      this.parentUrl = params.get('parentUrl') || 'not set';
     }
   }
 }
